@@ -94,7 +94,7 @@
                     and the language a person speaks is a essential element of daily life.
                 </p>
                 <p>Jesus <span  class="mention-hide">Help</span><span class="mention-one">&nbsp</span>  you!</p>
-                <p>Jesus <span  class="mention-hide">Help</span><span data-attribute="have fun" class="mention-one">i love you</span>  you!</p>
+                <p>Jesus <span  class="mention-hide">Help</span><span data-attribute="have fun" class="mention-one">man handling</span>  you!</p>
                 `
     };
 
@@ -168,8 +168,8 @@
     ClassicEditor
         .create(document.querySelector('#editor'), {
             initialData: div.innerHTML,
-			extraPlugins: [CommentsIntegration],
-			licenseKey:'zfnVquqGPfpSCtv/LCEX/ImzGGk1tAl1ZHQEoUkRE3/NDF10CaJXIp1cNja0',
+            extraPlugins: [CommentsIntegration],
+            licenseKey:'zfnVquqGPfpSCtv/LCEX/ImzGGk1tAl1ZHQEoUkRE3/NDF10CaJXIp1cNja0',
             toolbar: {
                 items: ['bold', 'italic', '|', 'comment']
             },
@@ -180,82 +180,13 @@
                     // which should be resolved when the data is successfully saved.
                     return saveData(editor.getData());
                 }
-            }
+            },
+            replacementData: spanValues
         })
         .then(editor => {
-
             window.editor = editor;
             const model = editor.model;
             const doc = model.document;
-
-            const getDataButton = document.getElementById("get-data");
-            getDataButton.addEventListener("click", () => console.log(editor.getData()));
-
-            function getMarkerAtPosition(editor, position) {
-                for (const marker of editor.model.markers) {
-                    const markerRange = marker.getRange();
-
-                    if (isPositionInRangeBoundaries(markerRange, position)) {
-                        if (marker.name.startsWith('restrictedEditingException:')) {
-                            return marker;
-                        }
-                    }
-                }
-            }
-
-            function isPositionInRangeBoundaries(range, position) {
-                return (
-                    range.containsPosition(position) ||
-                    range.end.isEqual(position) ||
-                    range.start.isEqual(position)
-                );
-            }
-
-            function getLastTextLine(range, model) {
-                let start = range.start;
-
-                const text = Array.from(range.getItems()).reduce((rangeText, node) => {
-                    // Trim text to a last occurrence of an inline element and update range start.
-                    if (!(node.is('text') || node.is('textProxy'))) {
-                        start = model.createPositionAfter(node);
-
-                        return '';
-                    }
-
-                    return rangeText + node.data;
-                }, '');
-
-                return {
-                    text, range: model.createRange(start, range.end)
-                };
-            }
-
-            editor.model.document.registerPostFixer(writer => {
-                const changes = editor.model.document.differ.getChanges();
-
-                for (const entry of changes) {
-                    if (entry.type == 'insert' && entry.name == '$text') {
-                        const modelSelection = doc.selection;
-                        const marker = getMarkerAtPosition(editor, modelSelection.anchor);
-                        if (!marker) {
-                            return;
-                        }
-                        const markerName = marker.name.split(':')[1];
-                        const test = getLastTextLine(marker.getRange(), editor.model);
-                        const finalText = test.text.replace(/\s/g, '').toLowerCase();
-                        const fillInvalue = spanValues[markerName - 1];
-                        const formattedValue = fillInvalue.spanContent.toLowerCase();
-                        if (finalText.length === 2 && formattedValue.startsWith(finalText)) {
-                            writer.remove(marker.getRange());
-                            writer.insertText(fillInvalue.spanContent, doc.selection.getFirstPosition())
-                        }
-                    }
-                }
-            }, {
-                priority: 'high'
-            });
-
-            // After the editor is initialized, add an action to be performed after a button is clicked.
         })
         .catch(error => console.error(error));
 </script>

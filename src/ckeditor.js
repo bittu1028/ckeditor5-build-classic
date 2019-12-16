@@ -31,6 +31,7 @@ import TableToolbar from '@ckeditor/ckeditor5-table/src/tabletoolbar';
 
 import Comments from '@ckeditor/ckeditor5-comments/src/comments';
 import RestrictedEditing from './plugins/restricted';
+import ReplaceText from './plugins/replace';
 
 
 export default class ClassicEditor extends ClassicEditorBase {}
@@ -60,7 +61,8 @@ ClassicEditor.builtinPlugins = [
 	Table,
 	TableToolbar,
 	RestrictedEditing,
-	Comments
+	Comments,
+	ReplaceText
 ];
 
 // Editor configuration.
