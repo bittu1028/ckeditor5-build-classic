@@ -25,7 +25,18 @@ export default class RestrictedEditing extends Plugin {
          * @type {Set.<String>}
          * @private
          */
-        this._alwaysEnabled = new Set( ['bold', 'undo', 'redo', 'comment', 'goToPreviousRestrictedEditingException', 'goToNextRestrictedEditingException' ] );
+        this._alwaysEnabled = new Set([
+            'bold',
+            'undo',
+            'redo',
+            'addCommentThread',
+            'removeCommentThread',
+            'addComment',
+            'updateComment',
+            'removeComment',
+            'goToPreviousRestrictedEditingException',
+            'goToNextRestrictedEditingException'
+        ]);
 
         /**
          * Commands allowed in non-restricted areas.
@@ -36,7 +47,7 @@ export default class RestrictedEditing extends Plugin {
          * @type {Set<string>}
          * @private
          */
-        this._allowedInException = new Set( ['bold', 'input', 'comment', 'delete', 'forwardDelete' ] );
+        this._allowedInException = new Set( ['bold', 'input', 'delete', 'forwardDelete' ] );
     }
 
     init() {

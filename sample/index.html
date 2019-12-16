@@ -188,6 +188,9 @@
             const model = editor.model;
             const doc = model.document;
 
+            const getDataButton = document.getElementById("get-data");
+            getDataButton.addEventListener("click", () => console.log(editor.getData()));
+
             function getMarkerAtPosition(editor, position) {
                 for (const marker of editor.model.markers) {
                     const markerRange = marker.getRange();
