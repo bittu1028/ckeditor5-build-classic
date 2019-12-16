@@ -22,6 +22,7 @@ export default class ReplaceText extends Plugin {
 		const editor = this.editor;
 		const model = editor.model;
 		const doc = model.document;
+		const input = editor.plugins.get( 'Input' );
 
 
         const spanData =  editor.config.get( 'replacementData' );
@@ -48,6 +49,9 @@ export default class ReplaceText extends Plugin {
 		});
 	
 				watcher.on( 'matched:data', ( evt, data ) => {
+					if ( !input.isInput( data.batch ) ) {
+						return;
+					}
 					const from = normalizeFrom( finalText );
 					const to = normalizeTo( formattedValue );
 					const matches = from.exec( data.text );
