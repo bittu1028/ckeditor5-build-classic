@@ -29,6 +29,10 @@ import PasteFromOffice from '@ckeditor/ckeditor5-paste-from-office/src/pastefrom
 import Table from '@ckeditor/ckeditor5-table/src/table';
 import TableToolbar from '@ckeditor/ckeditor5-table/src/tabletoolbar';
 
+import Comments from '@ckeditor/ckeditor5-comments/src/comments';
+import RestrictedEditing from './plugins/restricted';
+
+
 export default class ClassicEditor extends ClassicEditorBase {}
 
 // Plugins to include in the build.
@@ -54,7 +58,9 @@ ClassicEditor.builtinPlugins = [
 	Paragraph,
 	PasteFromOffice,
 	Table,
-	TableToolbar
+	TableToolbar,
+	RestrictedEditing,
+	Comments
 ];
 
 // Editor configuration.

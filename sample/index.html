@@ -1,41 +1,258 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-	<meta charset="utf-8">
-	<title>CKEditor 5 – classic editor build – development sample</title>
-	<style>
-		body {
-			max-width: 800px;
-			margin: 20px auto;
-		}
-	</style>
+    <meta charset="utf-8">
+    <title>CKEditor 5 collaboration with comments</title>
+    <style type="text/css">
+        #editor {
+            background: #fff;
+            border: 1px solid hsl(0, 0%, 70%);
+            width: 100%;
+        }
+        
+        .restricted-editing-exception {
+            border-bottom: 1px solid;
+        }
+        
+        .restricted-editing-exception_collapsed {
+            padding-left: 1em;
+        }
+        
+        .mention-one {
+            border-bottom: 1px solid black;
+            display: inline-block;
+            width: 200px;
+            z-index: 8;
+        }
+    </style>
 </head>
+
 <body>
+    <button id="get-data">Get editor data</button>
 
-<h1>CKEditor 5 – classic editor build – development sample</h1>
-
-<div id="editor">
-	<h2>Sample</h2>
-
-	<p>This is an instance of the <a href="https://ckeditor.com/docs/ckeditor5/latest/builds/guides/overview.html#classic-editor">classic editor build</a>.</p>
-
-	<figure class="image">
-		<img src="../tests/manual/sample.jpg" alt="Autumn fields" />
-	</figure>
-
-	<p>You can use this sample to validate whether your <a href="https://ckeditor.com/docs/ckeditor5/latest/builds/guides/development/custom-builds.html">custom build</a> works fine.</p>
-</div>
-
-<script src="../build/ckeditor.js"></script>
-<script>
-	ClassicEditor.create( document.querySelector( '#editor' ) )
-		.then( editor => {
-			window.editor = editor;
-		} )
-		.catch( error => {
-			console.error( 'There was a problem initializing the editor.', error );
-		} );
-</script>
-
+    <div id="container">
+        <div id="editor"></div>
+    </div>
 </body>
+<script src="../build/ckeditor.js"></script>
+
+<script>
+    // Application data will be available under a global variable `appData`.
+    const appData = {
+        // Users data.
+        users: [{
+            id: 'user-1',
+            name: 'Joe Doe',
+            // Note that the avatar is optional.
+            avatar: 'https://randomuser.me/api/portraits/thumb/men/26.jpg'
+        }, {
+            id: 'user-2',
+            name: 'Ella Harper',
+            avatar: 'https://randomuser.me/api/portraits/thumb/women/65.jpg'
+        }],
+
+        // The ID of the current user.
+        userId: 'user-1',
+
+        // Comment threads data.
+        commentThreads: [{
+            threadId: 'thread-1',
+            comments: [{
+                commentId: 'comment-1',
+                authorId: 'user-1',
+                content: '<p>Are we sure we want to use a made-up disorder name?</p>',
+                createdAt: new Date('09/20/2018 14:21:53')
+            }, {
+                commentId: 'comment-2',
+                authorId: 'user-2',
+                content: '<p>Why not?</p>',
+                createdAt: new Date('09/21/2018 08:17:01')
+            }]
+        }],
+
+        // Editor initial data.
+        initialData: `<h2>
+                    <comment id="thread-1" type="start"></comment>
+                    Bilingual Personality Disorder
+                    <comment id="thread-1" type="end"></comment>
+                </h2>
+                <p>Jesus <span class="fill" data-attribute="loves"></span> you!</p>
+                <p>Jesus <span  class="mention-hide">Help</span><span class="mention-one">testing</span>  you!</p>
+
+                <p>
+                    This may be the first time you hear about this made-up disorder but it actually isn’t so far from the truth.
+                    As recent studies show, the language you speak has more effects on you then you realise.
+                    According to the studies, the language a person speaks affects their cognition,
+                    behaviour, emotions and hence <strong>their personality</strong>.
+                </p>
+                <p>
+                    This shouldn’t come as a surprise
+                    <a href="https://en.wikipedia.org/wiki/Lateralization_of_brain_function">since we already know</a>
+                    that different regions of the brain becomes more active depending on the activity.
+                    Since structure, information and especially <strong>the culture</strong> of languages varies substantially
+                    and the language a person speaks is a essential element of daily life.
+                </p>
+                <p>Jesus <span  class="mention-hide">Help</span><span class="mention-one">&nbsp</span>  you!</p>
+                <p>Jesus <span  class="mention-hide">Help</span><span data-attribute="have fun" class="mention-one">i love you</span>  you!</p>
+                `
+    };
+
+    const div = document.createElement("div");
+    div.innerHTML = appData.initialData;
+
+    const spanValues = [];
+
+    [...div.querySelectorAll("span")].map((span, index) => {
+
+        if (!span.className.includes("mention-one")) {
+            return;
+        }
+
+        const spanId = `hc_fill_${index + 1}`;
+        const spanContent = span.textContent;
+
+        // Store the span valud
+        spanValues.push({
+            spanId, spanContent
+        })
+
+        // empty span 
+        span.textContent = "";
+
+        // determine number of underscores to be appended
+        const numberOfUnderlines = spanContent.length;
+
+        for (let i = 1; i <= numberOfUnderlines; i++) {
+            span.textContent = span.textContent + '\u00A0';
+        }
+
+        // assign id to span
+        span.id = spanId;
+    });
+
+    class CommentsIntegration {
+        constructor(editor) {
+            this.editor = editor;
+        }
+
+        init() {
+            const usersPlugin = this.editor.plugins.get('Users');
+            const commentsPlugin = this.editor.plugins.get('Comments');
+
+            // Load the users data.
+            for (const user of appData.users) {
+                usersPlugin.addUser(user);
+            }
+
+            // Set the current user.
+            usersPlugin.defineMe(appData.userId);
+
+            // Load the comment threads data.
+            for (const commentThread of appData.commentThreads) {
+                commentsPlugin.addCommentThread(commentThread);
+            }
+        }
+    }
+
+    function saveData(data) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                // console.log( 'Saved', data );
+
+                resolve();
+            }, 500);
+        });
+    }
+
+    ClassicEditor
+        .create(document.querySelector('#editor'), {
+            initialData: div.innerHTML,
+            extraPlugins: [CommentsIntegration],
+            toolbar: {
+                items: ['bold', 'italic', '|', 'comment', 'highlight:blueMarker', 'highlight:greenMarker', 'highlight:pinkMarker', 'placeholder']
+            },
+            autosave: {
+                waitingTime: 5000,
+                save(editor) {
+                    // The saveData() function must return a promise
+                    // which should be resolved when the data is successfully saved.
+                    return saveData(editor.getData());
+                }
+            }
+        })
+        .then(editor => {
+
+            window.editor = editor;
+            const model = editor.model;
+            const doc = model.document;
+
+            function getMarkerAtPosition(editor, position) {
+                for (const marker of editor.model.markers) {
+                    const markerRange = marker.getRange();
+
+                    if (isPositionInRangeBoundaries(markerRange, position)) {
+                        if (marker.name.startsWith('restrictedEditingException:')) {
+                            return marker;
+                        }
+                    }
+                }
+            }
+
+            function isPositionInRangeBoundaries(range, position) {
+                return (
+                    range.containsPosition(position) ||
+                    range.end.isEqual(position) ||
+                    range.start.isEqual(position)
+                );
+            }
+
+            function getLastTextLine(range, model) {
+                let start = range.start;
+
+                const text = Array.from(range.getItems()).reduce((rangeText, node) => {
+                    // Trim text to a last occurrence of an inline element and update range start.
+                    if (!(node.is('text') || node.is('textProxy'))) {
+                        start = model.createPositionAfter(node);
+
+                        return '';
+                    }
+
+                    return rangeText + node.data;
+                }, '');
+
+                return {
+                    text, range: model.createRange(start, range.end)
+                };
+            }
+
+            editor.model.document.registerPostFixer(writer => {
+                const changes = editor.model.document.differ.getChanges();
+
+                for (const entry of changes) {
+                    if (entry.type == 'insert' && entry.name == '$text') {
+                        const modelSelection = doc.selection;
+                        const marker = getMarkerAtPosition(editor, modelSelection.anchor);
+                        if (!marker) {
+                            return;
+                        }
+                        const markerName = marker.name.split(':')[1];
+                        const test = getLastTextLine(marker.getRange(), editor.model);
+                        const finalText = test.text.replace(/\s/g, '').toLowerCase();
+                        const fillInvalue = spanValues[markerName - 1];
+                        const formattedValue = fillInvalue.spanContent.toLowerCase();
+                        if (finalText.length === 2 && formattedValue.startsWith(finalText)) {
+                            writer.remove(marker.getRange());
+                            writer.insertText(fillInvalue.spanContent, doc.selection.getFirstPosition())
+                        }
+                    }
+                }
+            }, {
+                priority: 'high'
+            });
+
+            // After the editor is initialized, add an action to be performed after a button is clicked.
+        })
+        .catch(error => console.error(error));
+</script>
 </html>
