@@ -168,9 +168,10 @@
     ClassicEditor
         .create(document.querySelector('#editor'), {
             initialData: div.innerHTML,
-            extraPlugins: [CommentsIntegration],
+			extraPlugins: [CommentsIntegration],
+			licenseKey:'zfnVquqGPfpSCtv/LCEX/ImzGGk1tAl1ZHQEoUkRE3/NDF10CaJXIp1cNja0',
             toolbar: {
-                items: ['bold', 'italic', '|', 'comment', 'highlight:blueMarker', 'highlight:greenMarker', 'highlight:pinkMarker', 'placeholder']
+                items: ['bold', 'italic', '|', 'comment']
             },
             autosave: {
                 waitingTime: 5000,
