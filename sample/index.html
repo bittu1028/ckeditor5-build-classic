@@ -27,11 +27,33 @@
             width: 200px;
             z-index: 8;
         }
+
+        .ck-user__avatar {
+            display: none !important;
+        }
+
+        .ck-comment__info-name {
+            display: none !important;
+        }
+
+        .ck-comment__user {
+            display: none !important;
+        }
+
+        .ck-thread__user {
+            display: none !important;
+        }
+        .ck-comment__info-time {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        
     </style>
 </head>
 
 <body>
-    <button id="get-data">Get editor data</button>
+    <button id="get-data">Get editor datas</button>
 
     <div id="container">
         <div id="editor"></div>
@@ -80,7 +102,7 @@
                     <comment id="thread-1" type="end"></comment>
                 </h2>
                 <p>Jesus <span class="fill" data-attribute="loves"></span> you!</p>
-                <p>Jesus <span  class="mention-hide">Help</span><span class="mention-one">testing</span>  you!</p>
+                <p>Jesus <span  class="mention-hide">Help </span><span class="mention-one">filling test</span>  you!</p>
 
                 <p>
                     This may be the first time you hear about this made-up disorder but it actually isn’t so far from the truth.
@@ -189,6 +211,70 @@
             window.editor = editor;
             const model = editor.model;
             const doc = model.document;
+            document.querySelector( '#get-data' ).addEventListener( 'click', () => {
+                    const editorData = editor.data.get();
+                   console.log(editorData, 'editorData');
+            } );
+
+            function getMarkerAtPosition( editor, position ) {
+                for ( const marker of editor.model.markers ) {
+                    const markerRange = marker.getRange();
+
+                    if ( isPositionInRangeBoundaries( markerRange, position ) ) {
+                        if ( marker.name.startsWith( 'restrictedEditingException:' ) ) {
+                            return marker;
+                        }
+                    }
+                }
+            }
+            function isPositionInRangeBoundaries( range, position ) {
+                return (
+                    range.containsPosition( position )
+                );
+            }
+
+            function getLastTextLine(range, model) {
+                let start = range.start;
+
+                const text = Array.from(range.getItems()).reduce((rangeText, node) => {
+                    // Trim text to a last occurrence of an inline element and update range start.
+                    if (!(node.is('text') || node.is('textProxy'))) {
+                        start = model.createPositionAfter(node);
+
+                        return '';
+                    }
+
+                    return rangeText + node.data;
+                }, '');
+
+                return {
+                    text, range: model.createRange(start, range.end)
+                };
+            } 
+
+            editor.editing.view.document.on('click', () => {
+                const modelSelection = doc.selection;
+                const marker = getMarkerAtPosition(editor, modelSelection.anchor);
+                if (!marker) {
+                    return false;
+                }
+                const markerName = marker.name.split(':')[1];
+                const fillInvalue = "testing".length / 2;
+                const lastInsertedContent = getLastTextLine(marker.getRange(), editor.model);
+                const word = lastInsertedContent.text.replace(/\s/g, '');
+                if(word === "") {
+                    let start = model.createPositionAt( marker.getStart() );
+                    start = start.getShiftedBy(fillInvalue);
+                    editor.editing.view.document.selection._setFocus(start, 'start');
+                    // start = start.getShiftedBy(fillInvalue.length / 2);
+                    editor.model.change( writer => {
+                        writer.setSelection(start);
+                    });
+                }
+             
+                console.log(modelSelection, 'modelSelections');
+                // modelSelection._setFocus(start);
+            })
         })
         .catch(error => console.error(error));
 </script>

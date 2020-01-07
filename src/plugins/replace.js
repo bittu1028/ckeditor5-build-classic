@@ -25,7 +25,8 @@ export default class ReplaceText extends Plugin {
 		const input = editor.plugins.get( 'Input' );
 
 
-        const spanData =  editor.config.get( 'replacementData' );
+		const spanData =  editor.config.get( 'replacementData' );
+		let word = '';
         
        
         
@@ -38,6 +39,7 @@ export default class ReplaceText extends Plugin {
 			}
 			const markerName = marker.name.split(':')[1];
 			const test = getLastTextLine(marker.getRange(), editor.model);
+			word = test.text.replace(/\s/g, '');
 			finalText = test.text.replace(/\s/g, '').toLowerCase();
 			const fillInvalue = spanData[markerName - 1];
 			formattedValue = fillInvalue.spanContent.toLowerCase();
@@ -52,18 +54,12 @@ export default class ReplaceText extends Plugin {
 					if ( !input.isInput( data.batch ) ) {
 						return;
 					}
-					const from = normalizeFrom( finalText );
+					const from = normalizeFrom(word);
 					const to = normalizeTo( formattedValue );
 					const matches = from.exec( data.text );
-					console.log('matches', matches);
 					const replaces = to( matches.slice( 1 ) );
-					console.log('replaces', replaces);
-					
-	
 					const matchedRange = data.range;
-	
 					let changeIndex = matches.index;
-	
 					model.enqueueChange( writer => {
 						for ( let i = 1; i < matches.length; i++ ) {
 							const match = matches[ i ];

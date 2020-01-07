@@ -68,3 +68,22 @@ export function isSelectionInMarker( selection, marker ) {
 
 	return markerRange.containsRange( selection.getFirstRange(), true );
 }
+
+export function getLastTextLine(range, model) {
+	let start = range.start;
+
+	const text = Array.from(range.getItems()).reduce((rangeText, node) => {
+		// Trim text to a last occurrence of an inline element and update range start.
+		if (!(node.is('text') || node.is('textProxy'))) {
+			start = model.createPositionAfter(node);
+
+			return '';
+		}
+
+		return rangeText + node.data;
+	}, '');
+
+	return {
+		text, range: model.createRange(start, range.end)
+	};
+} 

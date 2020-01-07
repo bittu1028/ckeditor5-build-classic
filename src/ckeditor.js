@@ -5,6 +5,7 @@
 
 // The editor creator to use.
 import ClassicEditorBase from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
+import BalloonEditorBase from '@ckeditor/ckeditor5-editor-balloon/src/ballooneditor';
 
 import Essentials from '@ckeditor/ckeditor5-essentials/src/essentials';
 import UploadAdapter from '@ckeditor/ckeditor5-adapter-ckfinder/src/uploadadapter';
@@ -34,10 +35,11 @@ import RestrictedEditing from './plugins/restricted';
 import ReplaceText from './plugins/replace';
 
 
-export default class ClassicEditor extends ClassicEditorBase {}
+export default class BalloonEditor extends BalloonEditorBase {}
+
 
 // Plugins to include in the build.
-ClassicEditor.builtinPlugins = [
+BalloonEditor.builtinPlugins = [
 	Essentials,
 	UploadAdapter,
 	Autoformat,
@@ -66,7 +68,7 @@ ClassicEditor.builtinPlugins = [
 ];
 
 // Editor configuration.
-ClassicEditor.defaultConfig = {
+BalloonEditor.defaultConfig = {
 	toolbar: {
 		items: [
 			'heading',

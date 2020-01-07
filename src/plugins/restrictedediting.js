@@ -2,7 +2,7 @@ import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
 
 import { toWidget,  toWidgetEditable, viewToModelPositionOutsideModelElement } from '@ckeditor/ckeditor5-widget/src/utils';
 import Matcher from '@ckeditor/ckeditor5-engine/src/view/matcher';
-import { getMarkerAtPosition, isSelectionInMarker, isPositionInRangeBoundaries } from './utils';
+import { getMarkerAtPosition, isSelectionInMarker, isPositionInRangeBoundaries, getLastTextLine } from './utils';
 import ClickObserver from '@ckeditor/ckeditor5-engine/src/view/observer/clickobserver';
 
 
@@ -26,7 +26,6 @@ export default class RestrictedEditing extends Plugin {
          * @private
          */
         this._alwaysEnabled = new Set([
-            'bold',
             'undo',
             'redo',
             'addCommentThread',
@@ -34,6 +33,7 @@ export default class RestrictedEditing extends Plugin {
             'addComment',
             'updateComment',
             'removeComment',
+            'highlight',
             'goToPreviousRestrictedEditingException',
             'goToNextRestrictedEditingException'
         ]);
@@ -72,6 +72,34 @@ export default class RestrictedEditing extends Plugin {
 
         doc.registerPostFixer( extendMarkerOnTypingPostFixer( editor ) );
         doc.registerPostFixer( resurrectCollapsedMarkerPostFixer( editor ) );
+
+        // editor.editing.view.document.on('click', () => {
+        //     const modelSelection = doc.selection;
+        //     const marker = getMarkerAtPosition(editor, modelSelection.anchor);
+        //     if (!marker) {
+        //         return false;
+        //     }
+        //     console.log('test');
+        //     const markerNameIndex = marker.name.split(':')[1];
+        //     const spanData =  editor.config.get( 'replacementData' );
+        //     const autofillValue  =  spanData[markerNameIndex - 1].spanContent;	
+        //     const cursorShiftPosition = autofillValue.length / 2;
+        //     const lastInsertedContent = getLastTextLine(marker.getRange(), editor.model);
+        //     const word = lastInsertedContent.text.replace(/\s/g, '');
+        //     if(word === "") {
+        //         let start = model.createPositionAt( marker.getStart() );
+        //         start = start.getShiftedBy(cursorShiftPosition);
+        //         editor.editing.view.document.selection._setFocus(start, 'start');
+        //         // start = start.getShiftedBy(fillInvalue.length / 2);
+        //         editor.model.change( writer => {
+        //             writer.setSelection(start);
+        //         });
+        //     }
+         
+        //     console.log(modelSelection, 'modelSelections');
+        //     // modelSelection._setFocus(start);
+        // })
+
         editor.editing.view.addObserver( ClickObserver );
     }
 
@@ -90,7 +118,7 @@ export default class RestrictedEditing extends Plugin {
         conversion.for( 'upcast' ).add( upcastHighlightToMarker( {
             view: {
                 name: 'span',
-                classes: 'mention-one'
+                classes: 'fill'
             },
             model: () => {
                 markerNumber++; // Starting from restrictedEditingException:1 marker.
@@ -107,7 +135,7 @@ export default class RestrictedEditing extends Plugin {
             view: () => {
                 return {
                     name: 'span',
-                    classes: 'restricted-editing-exception',
+                    classes: 'fill',
                     priority: -10
                 };
             }
@@ -117,7 +145,7 @@ export default class RestrictedEditing extends Plugin {
             model: 'restrictedEditingException',
             view: ( markerData, viewWriter ) => {
                 return viewWriter.createUIElement( 'span', {
-                    class: 'restricted-editing-exception restricted-editing-exception_collapsed'
+                    class: 'fill restricted-editing-exception_collapsed'
                 } );
             }
         } );
@@ -126,7 +154,7 @@ export default class RestrictedEditing extends Plugin {
             model: 'restrictedEditingException',
             view: ( markerData, viewWriter ) => {
                 return viewWriter.createEmptyElement( 'span', {
-                    class: 'restricted-editing-exception'
+                    class: 'fill'
                 } );
             }
         } );
@@ -211,11 +239,6 @@ export default class RestrictedEditing extends Plugin {
                 }
             } );
         }
-
-     
-      
-
-       
     }
 
     /**
@@ -252,9 +275,21 @@ export default class RestrictedEditing extends Plugin {
         const marker = getMarkerAtPosition( editor, selection.focus );
 
         this._disableCommands();
+        const spanData =  editor.config.get( 'replacementData' );
 
         if ( isSelectionInMarker( selection, marker ) ) {
-            this._enableCommands( marker );
+                this._enableCommands( marker );
+                const markerRange = marker.getRange();
+                const string = getLastTextLine(markerRange, editor.model);
+                const word = string.text.trim();
+                const markerNameIndex = marker.name.split(':')[1];
+                let autofillValue =  spanData[markerNameIndex - 1].spanContent;	
+
+                if(word.length === autofillValue.length) {
+                    this._disableCommands();
+                    const command  = editor.commands.get('delete');
+                    command.clearForceDisabled( 'RestrictedEditingMode' );
+                }
         }
     }
 
