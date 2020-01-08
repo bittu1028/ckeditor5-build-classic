@@ -98,6 +98,7 @@
     }
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-alignment": "^16.0.0",
     "@ckeditor/ckeditor5-editor-balloon": "^16.0.0"
   }
 }
